@@ -3,7 +3,7 @@ project(cpp)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(marrow_test compare_test.cpp)
+add_executable(marrow_test compare_test.cpp index_test.cpp)
 add_test(NAME marrow_test
         COMMAND marrow_test)
 

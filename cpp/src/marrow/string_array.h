@@ -55,7 +55,7 @@ namespace marrow {
 
     };
 
-    std::shared_ptr<IStringArray> make_istring_array(std::shared_ptr<arrow::Array> array) {
+    static inline std::shared_ptr<IStringArray> make_istring_array(std::shared_ptr<arrow::Array> array) {
         switch (array->type_id()) {
             case arrow::Type::STRING:
                 return std::make_shared<StringArray<arrow::StringArray>>(array);

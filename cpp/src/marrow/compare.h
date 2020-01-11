@@ -6,6 +6,7 @@
 #define CPP_COMPARE_H
 
 #include <arrow/array.h>
+#include <arrow/record_batch.h>
 #include <marrow/string_array.h>
 
 namespace marrow {
