@@ -28,7 +28,7 @@ namespace marrow {
     template<typename TIndexArray>
     class IndexRecordBatch : public IIndexRecordBatch {
     public:
-        IndexRecordBatch(std::shared_ptr<arrow::Array> index) : _index(index) {
+        IndexRecordBatch(std::shared_ptr<arrow::Array> index) : _index(std::dynamic_pointer_cast<TIndexArray>(index)) {
         }
         int64_t get_index(int64_t index) const {
             return _index->Value(index);
@@ -38,7 +38,29 @@ namespace marrow {
         std::shared_ptr<TIndexArray> _index;
     };
 
-    arrow::Status inner(std::shared_ptr<arrow::RecordBatch> left, std::shared_ptr<arrow::RecordBatch> right, std::shared_ptr<IIndexRecordBatch> left_index,  std::shared_ptr<IIndexRecordBatch> right_index, std::vector<std::string> on, std::shared_ptr<arrow::RecordBatch>* table_out, std::string right_prefix = "") {
+    std::shared_ptr<IIndexRecordBatch> make_index(std::shared_ptr<arrow::Array> index) {
+        if (index) {
+            switch (index->type_id()) {
+                case arrow::Type::INT8:
+                    return std::make_shared<IndexRecordBatch<arrow::Int8Array>>(index);
+                case arrow::Type::INT16:
+                    return std::make_shared<IndexRecordBatch<arrow::Int16Array>>(index);
+                case arrow::Type::INT32:
+                    return std::make_shared<IndexRecordBatch<arrow::Int32Array>>(index);
+                case arrow::Type::INT64:
+                    return std::make_shared<IndexRecordBatch<arrow::Int64Array>>(index);
+                default:
+                    throw std::runtime_error("Invalid index type: " + index->type()->ToString());
+            }
+        }
+        static auto ret = std::make_shared<SortedIndexRecordBatch>();
+        return ret;
+    }
+
+    static arrow::Status inner(std::shared_ptr<arrow::RecordBatch> left, std::shared_ptr<arrow::RecordBatch> right, std::shared_ptr<arrow::Array> left_index_array,  std::shared_ptr<arrow::Array> right_index_array, std::vector<std::string> on, std::shared_ptr<arrow::RecordBatch>* table_out, std::string right_prefix = "") {
+        auto left_index = make_index(left_index_array);
+        auto right_index = make_index(right_index_array);
+
         arrow::AdaptiveIntBuilder left_builder, right_builder;
         auto comparer = make_comparer(left, right, on);
         int64_t lindex = 0, rindex = 0, lend = left->num_rows(), rend = right->num_rows();
@@ -67,7 +89,7 @@ namespace marrow {
                     }
                 }
                 for (auto l = lindex; l < li_end; l++) {
-                    for (auto r = ri; r < ri_end; r++) {
+                    for (auto r = rindex; r < ri_end; r++) {
                         ARROW_RETURN_NOT_OK(left_builder.Append(left_index->get_index(l)));
                         ARROW_RETURN_NOT_OK(right_builder.Append(right_index->get_index(r)));
                     }

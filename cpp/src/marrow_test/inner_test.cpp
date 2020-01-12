@@ -28,7 +28,7 @@ TYPED_TEST(TestInnerMerge, TestSimple) {
             .record_batch();
 
     std::shared_ptr<arrow::RecordBatch> actual;
-    ASSERT_STATUS_OK(marrow::inner(batch1, batch2, std::make_shared<marrow::SortedIndexRecordBatch>(), std::make_shared<marrow::SortedIndexRecordBatch>(), {"a"}, &actual));
+    ASSERT_STATUS_OK(marrow::inner(batch1, batch2, std::shared_ptr<arrow::Array>(), std::shared_ptr<arrow::Array>(), {"a"}, &actual));
 
     auto expected = BatchMaker()
             .add_array<TypeParam>("a", {1, 1, 2, 5, 5}, 99)
@@ -51,12 +51,38 @@ TYPED_TEST(TestInnerMerge, TestWithNulls) {
             .record_batch();
 
     std::shared_ptr<arrow::RecordBatch> actual;
-    ASSERT_STATUS_OK(marrow::inner(batch1, batch2, std::make_shared<marrow::SortedIndexRecordBatch>(), std::make_shared<marrow::SortedIndexRecordBatch>(), {"a"}, &actual));
+    ASSERT_STATUS_OK(marrow::inner(batch1, batch2, std::shared_ptr<arrow::Array>(), std::shared_ptr<arrow::Array>(), {"a"}, &actual));
 
     auto expected = BatchMaker()
             .add_array<TypeParam>("a", {0, 0, 2, 5, 5})
             .template add_array<TypeParam>("b", {11, 12, 0, 51, 51})
             .template add_array<TypeParam>("c", {11, 11, 0, 51, 52})
+            .record_batch();
+    SCOPED_TRACE(compare_msg(actual, expected));
+    ASSERT_TRUE(actual->Equals(*expected));
+}
+
+TYPED_TEST(TestInnerMerge, TestWithIndex) {
+    auto batch1 = BatchMaker()
+            .add_array<TypeParam>("a", {5, 3, 2, 1, 1}, 99)
+            .template add_array<TypeParam>("b", {51, 32, 21, 11, 12})
+            .record_batch();
+
+    auto batch2 = BatchMaker()
+            .add_array<TypeParam>("a", {4, 5, 5, 1, 2}, 99)
+            .template add_array<TypeParam>("c", {41, 51, 52, 11, 21})
+            .record_batch();
+
+    std::shared_ptr<arrow::Array> index1, index2;
+    ASSERT_STATUS_OK(marrow::make_index(batch1, {"a"}, &index1));
+    ASSERT_STATUS_OK(marrow::make_index(batch2, {"a"}, &index2));
+    std::shared_ptr<arrow::RecordBatch> actual;
+    ASSERT_STATUS_OK(marrow::inner(batch1, batch2, index1, index2, {"a"}, &actual));
+
+    auto expected = BatchMaker()
+            .add_array<TypeParam>("a", {1, 1, 2, 5, 5}, 99)
+            .template add_array<TypeParam>("b", {11, 12, 21, 51, 51})
+            .template add_array<TypeParam>("c", {11, 11, 21, 51, 52})
             .record_batch();
     SCOPED_TRACE(compare_msg(actual, expected));
     ASSERT_TRUE(actual->Equals(*expected));
@@ -76,7 +102,7 @@ TYPED_TEST(TestInnerMerge, TestMultiColumns) {
             .record_batch();
 
     std::shared_ptr<arrow::RecordBatch> actual;
-    ASSERT_STATUS_OK(marrow::inner(batch1, batch2, std::make_shared<marrow::SortedIndexRecordBatch>(), std::make_shared<marrow::SortedIndexRecordBatch>(), {"a", "b"}, &actual, "_right"));
+    ASSERT_STATUS_OK(marrow::inner(batch1, batch2, std::shared_ptr<arrow::Array>(), std::shared_ptr<arrow::Array>(), {"a", "b"}, &actual, "_right"));
 
     auto expected = BatchMaker()
             .add_array<TypeParam>("a", {1, 3, 3, 3, 3, 5}, 99)
@@ -100,7 +126,7 @@ TYPED_TEST(TestInnerMerge, TestLeftHasMore) {
             .record_batch();
 
     std::shared_ptr<arrow::RecordBatch> actual;
-    ASSERT_STATUS_OK(marrow::inner(batch1, batch2, std::make_shared<marrow::SortedIndexRecordBatch>(), std::make_shared<marrow::SortedIndexRecordBatch>(), {"a"}, &actual));
+    ASSERT_STATUS_OK(marrow::inner(batch1, batch2, std::shared_ptr<arrow::Array>(), std::shared_ptr<arrow::Array>(), {"a"}, &actual));
 
     auto expected = BatchMaker()
             .add_array<TypeParam>("a", {3}, 99)
@@ -123,7 +149,7 @@ TYPED_TEST(TestInnerMerge, TestRightHasMore) {
             .record_batch();
 
     std::shared_ptr<arrow::RecordBatch> actual;
-    ASSERT_STATUS_OK(marrow::inner(batch1, batch2, std::make_shared<marrow::SortedIndexRecordBatch>(), std::make_shared<marrow::SortedIndexRecordBatch>(), {"a"}, &actual));
+    ASSERT_STATUS_OK(marrow::inner(batch1, batch2, std::shared_ptr<arrow::Array>(), std::shared_ptr<arrow::Array>(), {"a"}, &actual));
 
     auto expected = BatchMaker()
             .add_array<TypeParam>("a", {3}, 99)
@@ -146,7 +172,7 @@ TYPED_TEST(TestInnerMerge, TestEmptyResult) {
             .record_batch();
 
     std::shared_ptr<arrow::RecordBatch> actual;
-    ASSERT_STATUS_OK(marrow::inner(batch1, batch2, std::make_shared<marrow::SortedIndexRecordBatch>(), std::make_shared<marrow::SortedIndexRecordBatch>(), {"a"}, &actual));
+    ASSERT_STATUS_OK(marrow::inner(batch1, batch2, std::shared_ptr<arrow::Array>(), std::shared_ptr<arrow::Array>(), {"a"}, &actual));
 
     auto expected = BatchMaker()
             .add_array<TypeParam>("a", {}, 99)
@@ -175,7 +201,7 @@ TYPED_TEST(TestInnerMergeWithString, TestSimple) {
             .record_batch();
 
     std::shared_ptr<arrow::RecordBatch> actual;
-    ASSERT_STATUS_OK(marrow::inner(batch1, batch2, std::make_shared<marrow::SortedIndexRecordBatch>(), std::make_shared<marrow::SortedIndexRecordBatch>(), {"a"}, &actual));
+    ASSERT_STATUS_OK(marrow::inner(batch1, batch2, std::shared_ptr<arrow::Array>(), std::shared_ptr<arrow::Array>(), {"a"}, &actual));
     {
         auto fields = batch1->schema()->fields();
         fields.push_back(batch2->schema()->field(1));
