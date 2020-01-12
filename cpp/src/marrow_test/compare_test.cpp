@@ -4,6 +4,7 @@
 
 #include "gtest/gtest.h"
 #include "batch_maker.h"
+#include "test_helpers.h"
 #include "marrow/compare.h"
 #include <arrow/type_traits.h>
 
@@ -27,10 +28,6 @@ template<typename TArrowType>
 class CompareScalarTest : public testing::Test {
 
 };
-
-using ScalarTypes = ::testing::Types<arrow::Int8Type, arrow::Int16Type, arrow::Int32Type, arrow::Int64Type,
-                                    arrow::UInt8Type, arrow::UInt16Type, arrow::UInt32Type, arrow::UInt64Type,
-                                    arrow::HalfFloatType, arrow::FloatType, arrow::DoubleType>;
 
 TYPED_TEST_CASE(CompareScalarTest, ScalarTypes);
 

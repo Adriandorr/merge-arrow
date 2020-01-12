@@ -13,10 +13,9 @@
 
 class BatchMaker {
 public:
-    template<class TType = arrow::Int32Type>
-    BatchMaker& add_array(std::string name, std::initializer_list<typename TType::c_type> values, typename TType::c_type null_value = 0) {
-        typedef typename arrow::TypeTraits<TType>::BuilderType BuilderType;
-        BuilderType builder;
+    template<class TBuilderType = arrow::Int32Builder, class TCType>
+    BatchMaker& add_array_impl(std::string name, std::initializer_list<TCType> values, TCType null_value) {
+        TBuilderType builder;
         for (auto v: values) {
             if (v == null_value) {
                 throw_if_not_ok(builder.AppendNull());
@@ -30,6 +29,13 @@ public:
         _arrays.push_back(array);
         _fields.push_back(arrow::field(name, array->type()));
         return *this;
+    }
+
+
+    template<class TType = arrow::Int32Type>
+    BatchMaker& add_array(std::string name, std::initializer_list<typename TType::c_type> values, typename TType::c_type null_value = 0) {
+        typedef typename arrow::TypeTraits<TType>::BuilderType BuilderType;
+        return add_array_impl<BuilderType>(name, values, null_value);
     }
 
     template<class TType = arrow::Int32Type>
