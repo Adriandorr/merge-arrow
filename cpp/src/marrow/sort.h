@@ -6,7 +6,6 @@
 #define MARROW_SORT_H
 
 #include <utility>
-
 #include "marrow/index.h"
 
 namespace marrow {
@@ -105,9 +104,8 @@ namespace marrow {
         NumericColumnBuilder<TIndexType> _index_builder;
     };
 
-
     template <typename TType>
-    arrow::Status sort(const std::shared_ptr<arrow::RecordBatch>& batch, std::shared_ptr<arrow::Array> index, std::shared_ptr<arrow::RecordBatch>* sorted_batch) {
+    arrow::Status batch_by_index(const std::shared_ptr<arrow::RecordBatch>& batch, std::shared_ptr<arrow::Array> index, std::shared_ptr<arrow::RecordBatch>* sorted_batch) {
         std::vector<std::shared_ptr<IColumnBuilder>> builders(batch->num_columns());
         for (int32_t i = 0; i < batch->num_columns(); i++) {
             auto array = batch->column(i);
@@ -190,23 +188,28 @@ namespace marrow {
             fields.push_back(arrow::field(batch->column_name(i), (*arrays.rbegin())->type()));
         }
 
-        *sorted_batch = arrow::RecordBatch::Make(arrow::schema(fields), batch->num_rows(), arrays);
+        *sorted_batch = arrow::RecordBatch::Make(arrow::schema(fields), index->length(), arrays);
+
         return arrow::Status::OK();
+    }
+
+    static arrow::Status batch_by_index(const std::shared_ptr<arrow::RecordBatch>& batch, std::shared_ptr<arrow::Array> index, std::shared_ptr<arrow::RecordBatch>* sorted_batch) {
+        switch (index->type_id()) {
+            case arrow::Type::INT8:
+                return batch_by_index<arrow::Int8Type>(batch, index, sorted_batch);
+            case arrow::Type::INT16:
+                return batch_by_index<arrow::Int16Type>(batch, index, sorted_batch);
+            case arrow::Type::INT32:
+                return batch_by_index<arrow::Int32Type>(batch, index, sorted_batch);
+            default:
+                return arrow::Status::Invalid("Unexpected index type: " + index->type()->ToString());
+        }
     }
 
     static inline arrow::Status sort(const std::shared_ptr<arrow::RecordBatch>& batch, std::vector<std::string> sort_columns, std::shared_ptr<arrow::RecordBatch>* sorted_batch) {
         std::shared_ptr<arrow::Array> index;
         ARROW_RETURN_NOT_OK(make_index(batch, sort_columns, &index));
-        switch (index->type_id()) {
-            case arrow::Type::INT8:
-                return sort<arrow::Int8Type>(batch, index, sorted_batch);
-            case arrow::Type::INT16:
-                return sort<arrow::Int16Type>(batch, index, sorted_batch);
-            case arrow::Type::INT32:
-                return sort<arrow::Int32Type>(batch, index, sorted_batch);
-            default:
-                return arrow::Status::Invalid("Unexpected index type: " + index->type()->ToString());
-        }
+        return batch_by_index(batch, index, sorted_batch);
     }
 }
 

@@ -52,34 +52,10 @@ TYPED_TEST(TestScalarSort, TestWithNulls) {
     ASSERT_TRUE(actual->Equals(*expected));
 }
 
-std::shared_ptr<arrow::RecordBatch> to_string_columns(std::shared_ptr<arrow::RecordBatch> batch) {
-    std::vector<std::shared_ptr<arrow::Array>> arrays;
-    std::vector<std::shared_ptr<arrow::Field>> fields;
-    for (auto i = 0; i < batch->num_columns(); i++) {
-        auto array = marrow::make_istring_array(batch->column(i));
-        arrow::StringBuilder builder;
-        for (int64_t i = 0; i < array->array().length(); i++) {
-            if (array->array().IsNull(i)) {
-                ARROW_THROW_NOT_OK(builder.AppendNull());
-            }
-            else {
-                ARROW_THROW_NOT_OK(builder.Append(array->Value(i)))
-            }
-        }
-        std::shared_ptr<arrow::Array> new_array;
-        ARROW_THROW_NOT_OK(builder.Finish(&new_array));
-        arrays.push_back(new_array);
-        fields.push_back(arrow::field(batch->column_name(i), new_array->type()));
-    }
-    return arrow::RecordBatch::Make(arrow::schema(fields), batch->num_rows(), arrays);
-}
-
 template<typename TType>
 class TestStringSort : public testing::Test {
 public:
 };
-using StringBuilderTypes = ::testing::Types<arrow::StringBuilder, arrow::LargeStringBuilder, arrow::StringDictionaryBuilder, arrow::StringDictionary32Builder>;
-
 TYPED_TEST_CASE(TestStringSort, StringBuilderTypes);
 
 TYPED_TEST(TestStringSort, TestSimple) {

@@ -27,7 +27,7 @@ namespace marrow {
         auto it = reinterpret_cast<c_type*>(buffer->mutable_data());
         auto end = it + batch->num_rows();
         std::iota(it, end, 0);
-        std::sort(it, end, [comparer](c_type i1, c_type i2) {return (*comparer)(i1, i2);});
+        std::sort(it, end, [comparer](c_type i1, c_type i2) {return comparer->lt(i1, i2);});
 
         *index_out = std::make_shared<typename TypeTrait::ArrayType>(batch->num_rows(), buffer);
         return arrow::Status::OK();
