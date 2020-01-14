@@ -18,7 +18,6 @@ namespace marrow {
         arrow::Status both(int64_t lindex, int64_t rindex) {
             ARROW_RETURN_NOT_OK(_lbuilder.Append(lindex));
             ARROW_RETURN_NOT_OK(_rbuilder.Append(rindex));
-            std::cout << "both: " << _lbuilder.length() << " " << _rbuilder.length() << std::endl;
             return arrow::Status::OK();
         }
 

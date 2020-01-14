@@ -115,8 +115,6 @@ namespace marrow {
         }
             std::shared_ptr<arrow::Array> left_array,  right_array;
         ARROW_RETURN_NOT_OK(index_builder.finish(&left_array, &right_array));
-        std::cout << "left: " << left_array->ToString() << std::endl;
-        std::cout << "right: " << right_array->ToString() << std::endl;
 
         ARROW_RETURN_NOT_OK(batch_by_index(left, left_array, &left));
 
