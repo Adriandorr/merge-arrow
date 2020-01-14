@@ -30,7 +30,7 @@ namespace marrow {
         }
 
         arrow::Status Append(int64_t source_index) final {
-            if (_array->IsNull(source_index)) {
+            if (source_index < 0 || _array->IsNull(source_index)) {
                 return _builder.AppendNull();
             }
             auto v = _array->Value(source_index);
@@ -60,7 +60,7 @@ namespace marrow {
         }
 
         arrow::Status Append(int64_t source_index) final {
-            if (_array->array().IsNull(source_index)) {
+            if (source_index < 0 || _array->array().IsNull(source_index)) {
                 return _builder.AppendNull();
             }
             auto v = _array->Value(source_index);
