@@ -15,6 +15,9 @@ namespace marrow {
         virtual arrow::util::string_view Value(int64_t index) const = 0;
 
         virtual const arrow::Array& array() const = 0;
+
+        virtual int64_t length() const  = 0;
+        virtual bool IsNull(int64_t index) const  = 0;
     };
 
     template<typename TArray = arrow::Int32Array>
@@ -30,6 +33,14 @@ namespace marrow {
 
         const arrow::Array& array() const final {
             return *_indices;
+        }
+
+        int64_t length() const final {
+            return _indices->length();
+        }
+
+        bool IsNull(int64_t index) const final {
+            return _indices->IsNull(index);
         }
     private:
         std::shared_ptr<TArray> _indices;
@@ -49,6 +60,14 @@ namespace marrow {
 
         const arrow::Array& array() const final {
             return *_array;
+        }
+
+        int64_t length() const {
+            return _array->length();
+        }
+
+        bool IsNull(int64_t index) const final {
+            return _array->IsNull(index);
         }
     private:
         std::shared_ptr<TArray> _array;

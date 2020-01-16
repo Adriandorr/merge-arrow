@@ -10,9 +10,16 @@
 #include <arrow/type_traits.h>
 #include <arrow/record_batch.h>
 #include <arrow/compute/api.h>
+#include <arrow/util/key_value_metadata.h>
 
 class BatchMaker {
 public:
+    BatchMaker& add_meta_data(std::string key, std::string value) {
+        _keys.push_back(key);
+        _values.push_back(value);
+        return *this;
+    }
+
     template<class TBuilderType = arrow::Int32Builder, class TCType>
     BatchMaker& add_array_impl(std::string name, const std::vector<TCType> values, TCType null_value) {
         TBuilderType builder;
@@ -83,7 +90,11 @@ public:
     }
 
     std::shared_ptr<arrow::RecordBatch> record_batch() {
-        auto schema = arrow::schema(_fields);
+        std::shared_ptr<arrow::KeyValueMetadata> metadata;
+        if (!_keys.empty()) {
+            metadata = arrow::key_value_metadata(_keys, _values);
+        }
+        auto schema = arrow::schema(_fields, metadata);
         auto batch = arrow::RecordBatch::Make(schema, _arrays[0]->length(), _arrays);
         _fields.clear();
         _arrays.clear();
@@ -103,5 +114,6 @@ private:
     }
     std::vector<std::shared_ptr<arrow::Field>> _fields;
     std::vector<std::shared_ptr<arrow::Array>> _arrays;
+    std::vector<std::string> _keys, _values;
 };
 #endif //MARROW_BATCH_MAKER_H

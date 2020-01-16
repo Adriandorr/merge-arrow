@@ -81,7 +81,7 @@ TYPED_TEST(TestOuterMerge, TestWithIndex) {
 
     auto expected = BatchMaker()
             .add_array<TypeParam>("a", {1, 1, 2, 3, 4, 5, 5})
-            .template add_array<TypeParam>("b", {11, 12, 21, 31, 41, 51, 51})
+            .template add_array<TypeParam>("b", {11, 12, 21, 31, 0, 51, 51})
             .template add_array<TypeParam>("c", {11, 11, 21, 0, 41, 51, 52})
             .record_batch();
     SCOPED_TRACE(compare_msg(actual, expected));
@@ -129,8 +129,8 @@ TYPED_TEST(TestOuterMerge, TestOuterHasMore) {
     ASSERT_STATUS_OK(marrow::outer(batch1, batch2, std::shared_ptr<arrow::Array>(), std::shared_ptr<arrow::Array>(), {"a"}, &actual));
 
     auto expected = BatchMaker()
-            .add_array<TypeParam>("a", {1, 1, 2, 3, 4. 5, 5})
-            .template add_array<TypeParam>("b", {11, 12, 0. 31, 0, 51, 52})
+            .add_array<TypeParam>("a", {1, 1, 2, 3, 4, 5, 5})
+            .template add_array<TypeParam>("b", {11, 12, 0, 31, 0, 51, 52})
             .template add_array<TypeParam>("c", {0, 0, 21, 31, 41, 0, 0})
             .record_batch();
     SCOPED_TRACE(compare_msg(actual, expected));
@@ -202,6 +202,7 @@ TYPED_TEST(TestOuterMergeWithString, TestSimple) {
 
     std::shared_ptr<arrow::RecordBatch> actual;
     ASSERT_STATUS_OK(marrow::outer(batch1, batch2, std::shared_ptr<arrow::Array>(), std::shared_ptr<arrow::Array>(), {"a"}, &actual));
+    if (typeid(TypeParam) != typeid(arrow::StringDictionary32Builder)) // the dictionay builder looses the Int32 type when unifying the on columns.
     {
         auto fields = batch1->schema()->fields();
         fields.push_back(batch2->schema()->field(1));

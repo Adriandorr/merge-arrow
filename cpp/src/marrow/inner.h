@@ -36,7 +36,7 @@ namespace marrow {
                                std::shared_ptr<arrow::Array> left_index_array,
                                std::shared_ptr<arrow::Array> right_index_array, std::vector<std::string> on,
                                std::shared_ptr<arrow::RecordBatch> *table_out, std::string right_prefix = "") {
-        return join_impl<InnerJoinBuilder, InnerJoinBuilder>(left, right, left_index_array, right_index_array, on, table_out, right_prefix);
+        return join_impl<InnerJoinBuilder>(left, right, left_index_array, right_index_array, on, table_out, right_prefix);
 
     }
 }
