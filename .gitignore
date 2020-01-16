@@ -1,3 +1,9 @@
 /cpp/cmake-build-*
 .idea
 *.swp
+/python/Miniconda*
+/python/env
+.eggs
+*.egg-info
+tmp
+/python/build
