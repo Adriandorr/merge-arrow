@@ -13,12 +13,43 @@ void load_pyarrow() {
     }
 }
 
-int test(int i) {
-    return 1 + i;
-}
+namespace pybind11 { namespace detail {
+    template <> struct type_caster<std::shared_ptr<arrow::RecordBatch>> {
+    public:
+        PYBIND11_TYPE_CASTER(std::shared_ptr<arrow::RecordBatch>, _("pyarrow.RecordBatch"));
+
+        /**
+         * Conversion part 1 (Python->C++): convert a PyObject into a inty
+         * instance or return false upon failure. The second argument
+         * indicates whether implicit conversions should be applied.
+         */
+        bool load(handle src, bool) {
+            /* Extract PyObject from handle */
+            PyObject *source = src.ptr();
+            std::shared_ptr<arrow::RecordBatch> ret;
+            auto status = arrow::py::unwrap_record_batch(source, &ret);
+            if (!status.ok()) {
+                return false;
+            }
+            value = ret;
+            return true;
+        }
+
+        /**
+         * Conversion part 2 (C++ -> Python): convert an inty instance into
+         * a Python object. The second and third arguments are used to
+         * indicate the return value policy and parent object (for
+         * ``return_value_policy::reference_internal``) and are generally
+         * ignored by implicit casters.
+         */
+        static handle cast(std::shared_ptr<arrow::RecordBatch> batch, return_value_policy /* policy */, handle /* parent */) {
+            return arrow::py::wrap_record_batch(batch);
+        }
+    };
+}} // namespace pybind11::detail
+
 PYBIND11_MODULE(pymarrow, m) {
     load_pyarrow();
-    m.def("test", &test, "testing");
     m.def("add_index", &marrow::api::add_index, "Add an index column and meta data, which can be used by the sort and merge methods.", pybind11::arg("batch"), pybind11::arg("on"));
     m.def("sort", &marrow::api::sort, "Sort the record batch by the specified columns. If an index column is present it uses that.", pybind11::arg("batch"), pybind11::arg("on"));
     m.def("merge", &marrow::api::merge, "Do a left, inner or outer merge. If the table has either an index or is sorted (and has the required meta data as added by the add_index and sort methods), it will use those, otherwise it will create a temporary index",

@@ -36,7 +36,8 @@ ext_modules = [
             get_cpp_src_dir()
 
         ],
-        language='c++'
+        language='c++',
+        libraries=['arrow', "arrow_python"]
     ),
 ]
 
