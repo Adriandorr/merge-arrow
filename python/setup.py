@@ -107,14 +107,14 @@ class BuildExt(build_ext):
 setup(
     name='pymarrow',
     version=__version__,
-    author='Adrian dorr',
+    author='Adrian Dorr',
     author_email='adrian.doerr@gmail.com',
     url='https://github.com/adriandorr/merge-arrow',
-    description='Appache arrow sort and merge library',
+    description='Apache arrow sort and merge library',
     long_description='',
     ext_modules=ext_modules,
-    install_requires=['pybind11>=2.4'],
-    setup_requires=['pybind11>=2.4'],
+    install_requires=['pybind11>=2.4', "pyarrow"],
+    setup_requires=['pybind11>=2.4', "pyarrow"],
     cmdclass={'build_ext': BuildExt},
     zip_safe=False,
 )
