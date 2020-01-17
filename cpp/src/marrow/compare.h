@@ -151,6 +151,7 @@ namespace marrow {
                     return false;
                 }
             }
+            return false;
         }
         bool gt(int64_t index1, int64_t index2) const final {
             for (auto c: _comparers) {

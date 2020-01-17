@@ -1,0 +1,31 @@
+package:
+  name: pymarrow
+  version: {{ environ.get('GIT_DESCRIBE_TAG', 'dev') }}
+
+build:
+  number: 1
+
+
+source:
+  path: ../..
+
+requirements:
+  build:
+    - python
+    - setuptools
+    - pybind11
+    - pyarrow
+
+  run:
+    - python
+    - pyarrow
+    - vs2015_runtime  # [win]
+
+test:
+  imports:
+    - pymarrow
+
+about:
+  summary: Apache arrow sort and merge library
+  license_file: LICENSE.txt
+

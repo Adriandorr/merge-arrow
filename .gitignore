@@ -1,3 +1,10 @@
 /cpp/cmake-build-*
 .idea
 *.swp
+/python/pymarrow.cpython-38-x86_64-linux-gnu.so
+/python/Miniconda*
+/python/env
+.eggs
+*.egg-info
+tmp
+/python/build

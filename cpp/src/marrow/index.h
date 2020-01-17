@@ -40,10 +40,10 @@ namespace marrow {
         else if (batch->num_rows() <= std::numeric_limits<int16_t>::max()) {
             return make_index<arrow::Int16Type>(batch, index_columns, index_out);
         }
-        else if (batch->num_rows() <= std::numeric_limits<int8_t>::max()) {
+        else if (batch->num_rows() <= std::numeric_limits<int32_t>::max()) {
             return make_index<arrow::Int32Type>(batch, index_columns, index_out);
         }
-
+        return make_index<arrow::Int64Type>(batch, index_columns, index_out);
     }
 }
 

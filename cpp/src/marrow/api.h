@@ -67,6 +67,8 @@ namespace marrow {
         return {index, batch};
     }
 
+    namespace api {
+
     std::shared_ptr<arrow::RecordBatch> add_index(std::shared_ptr<arrow::RecordBatch> batch, std::vector<std::string> on) {
         std::shared_ptr<arrow::Array> index;
         ARROW_THROW_NOT_OK(make_index(batch, on, &index));
@@ -99,6 +101,7 @@ namespace marrow {
         }
 
         return ret;
+    }
     }
 }
 
