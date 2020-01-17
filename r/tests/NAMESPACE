@@ -1,0 +1,4 @@
+useDynLib(rmarrow, .registration = TRUE)
+export(add_index)
+export(sort)
+export(merge)

@@ -4,23 +4,24 @@ SHELL=/bin/bash
 
 MAKEFILE_PATH := $(realpath $(lastword $(MAKEFILE_LIST)))
 CURRENT_DIR := $(dir $(MAKEFILE_PATH) )
-
-CONDA_DEPS=pyarrow pybind11
-CONDA_ENV_NAME=pymarrow-dev
+CONDA_DEPS=r-arrow
+CONDA_ENV_NAME=rmarrow-dev
 
 include $(CURRENT_DIR)../conda-env.mk
 
 conda_dev: $(CONDA_ENV)
-	rm -rf $(CURRENT_DIR)/build $(CURRENT_DIR)/pymarrow.egg-info
+	echo $(CONDA_ENV)
 	source $(CONDA_ROOT)/bin/activate $(CONDA_ENV_NAME) && \
-	python setup.py develop
+	R CMD INSTALL --build
 
 conda_package: $(CONDA_ENV)
-	$(CONDA_ROOT)/bin/conda build --no-anaconda-upload --override-channels -c conda-forge $(CURRENT_DIR)conda
+	echo TODO
 
 test: conda_dev
 	source $(CONDA_ROOT)/bin/activate $(CONDA_ENV_NAME) && \
-	python setup.py test
+	R CMD INSTALL --install-tests --no-test-load --no-docs --no-help --no-byte-compile .
+	source $(CONDA_ROOT)/bin/activate $(CONDA_ENV_NAME) && \
+	R --slave -e 'library(testthat); setwd(file.path(.libPaths()[1], "tests")); system.time(test_check("marrow", filter="${file}", reporter=ifelse(nchar("${r}"), "${r}", "summary")))'
 
 all: test conda_package
 

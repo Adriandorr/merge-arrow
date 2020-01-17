@@ -12,4 +12,4 @@ The base implementation is in C++ and is a a header only library.
 WIP
 
 #R
-WIP  
+Install R arrow package as described here: [r arrow](https://arrow.apache.org/docs/r/)
